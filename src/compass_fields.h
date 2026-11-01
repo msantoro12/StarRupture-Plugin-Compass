@@ -61,16 +61,15 @@ namespace CompassFields
 	// and only then gathers the marker data. A stale offset would write into
 	// whatever now sits there, so on a build the loader has no row for, the
 	// compass is refused instead.
-	// CL-125218 (Update 2) and CL-127004: 0xF68; the layout diff lists no move
-	// on CL-128786. The rows below are this plugin's own until the loader's map
-	// carries them.
+	// CL-125218 (Update 2) and CL-127004: 0xF68. The row below is this plugin's
+	// own for the build it was compiled against; every other build comes from
+	// the loader's map.
 	inline auto MapMenuOpen = PluginField<uint8_t>{ { "ACrPlayerControllerBase::bMapMenuOpen",
 		"ACrPlayerControllerBase", "bMapMenuOpen", PLUGIN_FIELD_NATIVE, sizeof(uint8_t),
 		static_cast<int32_t>(AobPatterns::Offsets::ACrPlayerControllerBase_bMapMenuOpen) } };
 
 	inline const PluginFieldCandidate kMapMenuOpenRows[] = {
 		{ 127004, static_cast<int32_t>(AobPatterns::Offsets::ACrPlayerControllerBase_bMapMenuOpen), 1, 0, nullptr },
-		{ 128786, static_cast<int32_t>(AobPatterns::Offsets::ACrPlayerControllerBase_bMapMenuOpen), 1, 0, nullptr },
 	};
 
 	// Asks the loader for every row above. False when any did not resolve; the
