@@ -3,6 +3,7 @@
 #include "plugin_helpers.h"
 #include "plugin_config.h"
 #include "../aob_patterns.h"
+#include "../compass_fields.h"
 #include "Engine_classes.hpp"
 #include "ChimeraUI_classes.hpp"
 #include "../layout/layout.h"
@@ -248,8 +249,8 @@ namespace Compass
 		// for our next scan. Setting it before the reads would only affect the tick
 		// AFTER this frame anyway, making it equivalent but less clear in intent.
 		SDK::APlayerController* localPC = SDK::UGameplayStatics::GetPlayerController(world, 0);
-		if (localPC)
-			*(uint8_t*)((char*)localPC + AobPatterns::Offsets::ACrPlayerControllerBase_bMapMenuOpen) = 1;
+		if (uint8_t* mapMenuOpen = CompassFields::MapMenuOpen.In(localPC))
+			*mapMenuOpen = 1;
 	}
 
 	// ---------------------------------------------------------------------------
@@ -262,7 +263,7 @@ namespace Compass
 		if (!s_isChimeraMain) return;
 
 		SDK::UWorld* world = nullptr;
-		try { world = SDK::UWorld::GetWorld(); }
+		try { world = PluginSdkRuntime::GetWorld(); }
 		catch (...) { return; }
 		if (!world) return;
 
@@ -722,7 +723,7 @@ namespace Compass
 	static void OnExperienceLoadComplete()
 	{
 		LOG_INFO("[Compass] OnExperienceLoadComplete: loading textures");
-		SDK::UWorld* world = SDK::UWorld::GetWorld();
+		SDK::UWorld* world = PluginSdkRuntime::GetWorld();
 		LoadAllTextures(world);
 	}
 
@@ -806,7 +807,7 @@ namespace Compass
 		if (!hud || !hud->Canvas) return;
 
 		SDK::UWorld* world = nullptr;
-		try { world = SDK::UWorld::GetWorld(); }
+		try { world = PluginSdkRuntime::GetWorld(); }
 		catch (...) { return; }
 		if (!world) return;
 
@@ -938,7 +939,7 @@ namespace Compass
 		// OnAnyWorldBeginPlay will never fire for this world, so set the flag now.
 		try
 		{
-			SDK::UWorld* currentWorld = SDK::UWorld::GetWorld();
+			SDK::UWorld* currentWorld = PluginSdkRuntime::GetWorld();
 			if (currentWorld && currentWorld->GetName() == "ChimeraMain")
 			{
 				s_isChimeraMain = true;
