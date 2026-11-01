@@ -72,6 +72,51 @@ namespace CompassFields
 		{ 127004, static_cast<int32_t>(AobPatterns::Offsets::ACrPlayerControllerBase_bMapMenuOpen), 1, 0, nullptr },
 	};
 
+	// The parts of the compass that can be off while the rest runs. Each lists
+	// the game members it reads; a member that does not resolve on a game build
+	// turns off that part and its config section, and the compass still draws.
+	// The map helper and bMapMenuOpen feed three of them. The Draw hook is not
+	// listed: without it there is no compass, so it stays a core miss.
+	inline PluginMap::Feature PlayerMarkers{ "players", "Other players on the compass",
+		{ "UCrMapManuSubsystem::GatherPlayersData", "ACrPlayerControllerBase::bMapMenuOpen",
+		  "ACrGameStateBase::MapMenuDataReplicationHelper",
+		  "ACrMapMenuDataReplicationHelper::PlayersMarkerDataContainer",
+		  "FPlayersMarkerDataContainer::PlayersMarkerData",
+		  "FPlayerMarkerDataFastArrayItem::Player", "FPlayerMarkerDataFastArrayItem::Location",
+		  "FPlayerMarkerDataFastArrayItem::PlayerColor", "FPlayerMarkerDataFastArrayItem::RotationZ",
+		  "FPlayerMarkerDataFastArrayItem::PlayerMarkerFlags", "FPlayerMarkerDataFastArrayItem" },
+		{ "Players.*" } };
+	inline PluginMap::Feature BaseCoreMarkers{ "basecores", "Base cores on the compass",
+		{ "ACrBaseCore::UpgradeLevel", "ACrBaseCore::bIsAttacked", "ACrBaseCore::IsInfected",
+		  "ACrPlayerControllerBase::bMapMenuOpen", "ACrGameStateBase::MapMenuDataReplicationHelper",
+		  "ACrMapMenuDataReplicationHelper::BuildingsMarkerDataContainer",
+		  "FBuildingsMarkerDataContainer::BuildingsMarkerData",
+		  "FBuildingMarkerDataFastArrayItem::Location", "FBuildingMarkerDataFastArrayItem::BuildingUniqueName",
+		  "FBuildingMarkerDataFastArrayItem" },
+		{ "BaseCores.*" } };
+	inline PluginMap::Feature FoundableMarkers{ "foundables", "Dead bodies and drones on the compass",
+		{ "ACrPlayerControllerBase::bMapMenuOpen", "ACrGameStateBase::MapMenuDataReplicationHelper",
+		  "ACrMapMenuDataReplicationHelper::FoundableMarkerDataContainer",
+		  "FFoundableMarkerDataContainer::FoundableMarkerData",
+		  "FFoundableMarkerDataFastArrayItem::Location", "FFoundableMarkerDataFastArrayItem::FoundableType",
+		  "FFoundableMarkerDataFastArrayItem" },
+		{ "Foundables.*" } };
+	inline PluginMap::Feature EnemyMarkers{ "enemies", "Enemy dots on the compass",
+		{ "AMassEnemyCharacterBase::Dissolve" }, { "Enemies.*" } };
+	inline PluginMap::Feature CustomPinMarkers{ "custompins", "Your map pins on the compass",
+		{ "ACrGameStateBase::PlayerPersonalMarkers", "FCrPlayerPersonalMarkerData::MarkerPosition",
+		  "FCrPlayerPersonalMarkerData::PlayerName", "FCrPlayerPersonalMarkerData::PlayerColor",
+		  "FCrPlayerPersonalMarkerData" },
+		{ "CustomPins.*" } };
+
+	// Call before Resolve and Compass::ResolvePatterns, so a miss lands on a
+	// feature and not on the whole plugin.
+	inline void DeclareFeatures(IPluginSelf* self, IPluginHookScanner* scanner)
+	{
+		PluginMap::DeclareFeatures(scanner, self,
+			PlayerMarkers, BaseCoreMarkers, FoundableMarkers, EnemyMarkers, CustomPinMarkers);
+	}
+
 	// Asks the loader for every row above. False when any did not resolve; the
 	// loader has then recorded the failure and refuses the plugin.
 	inline bool Resolve(IPluginSelf* self, IPluginHookScanner* scanner)
@@ -90,12 +135,7 @@ namespace CompassFields
 	}
 
 	// The member's value, or a fallback when the member did not resolve.
-	template <class T, class Object>
-	T ValueOr(const PluginField<T>& field, const Object* object, T fallback = T{})
-	{
-		const T* at = field.In(static_cast<const void*>(object));
-		return at ? *at : fallback;
-	}
+	using PluginMap::ValueOr;
 
 	// The array a container member of the map helper holds, or null when either
 	// member did not resolve.

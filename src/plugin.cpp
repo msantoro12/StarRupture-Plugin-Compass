@@ -20,10 +20,7 @@ static PluginInfo s_pluginInfo = {
 	PLUGIN_INTERFACE_VERSION,
 	PLUGIN_TARGET_CLIENT,
 	PLUGIN_GAME_BUILT_CL,
-	// PLUGIN_MAP_MIGRATED is not set yet: it needs the loader's admission by built
-	// CL and the CI check of the used set. Until then the plugin runs only on
-	// the game build it was compiled for.
-	0
+	PLUGIN_MAP_MIGRATED
 };
 
 extern "C" {
@@ -39,6 +36,7 @@ extern "C" {
 	__declspec(dllexport) void OnPluginLoadHooks(IPluginSelf* self, IPluginHookScanner* scanner)
 	{
 		g_self = self;
+		CompassFields::DeclareFeatures(self, scanner);
 		CompassFields::Resolve(self, scanner);
 		Compass::ResolvePatterns(self, scanner);
 	}
