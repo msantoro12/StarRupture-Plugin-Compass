@@ -39,6 +39,7 @@ extern "C" {
 	__declspec(dllexport) void OnPluginLoadHooks(IPluginSelf* self, IPluginHookScanner* scanner)
 	{
 		g_self = self;
+		CompassFields::DeclareFeatures(self, scanner);
 		CompassFields::Resolve(self, scanner);
 		Compass::ResolvePatterns(self, scanner);
 	}

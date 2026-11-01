@@ -96,12 +96,18 @@ namespace Compass
 		s_cfg.playerScanInterval = CompassConfig::Config::GetPlayerScanInterval();
 		CompassConfig::Config::GetLineColor(
 			s_cfg.lineColor.R, s_cfg.lineColor.G, s_cfg.lineColor.B, s_cfg.lineColor.A);
-		s_cfg.players = CompassConfig::Config::GetPlayers();
-		s_cfg.cores = CompassConfig::Config::GetBaseCores();
+		// A feature that is off keeps its section unread and its markers hidden.
+		s_cfg.players = CompassFields::PlayerMarkers.On()
+			? CompassConfig::Config::GetPlayers() : CompassConfig::EntitySettings{};
+		s_cfg.cores = CompassFields::BaseCoreMarkers.On()
+			? CompassConfig::Config::GetBaseCores() : CompassConfig::EntitySettings{};
 		s_cfg.markers = CompassConfig::Config::GetMarkers();
-		s_cfg.foundables = CompassConfig::Config::GetFoundables();
-		s_cfg.enemies = CompassConfig::Config::GetEnemies();
-		s_cfg.customPins = CompassConfig::Config::GetCustomPins();
+		s_cfg.foundables = CompassFields::FoundableMarkers.On()
+			? CompassConfig::Config::GetFoundables() : CompassConfig::FoundableSettings{};
+		s_cfg.enemies = CompassFields::EnemyMarkers.On()
+			? CompassConfig::Config::GetEnemies() : CompassConfig::EntitySettings{};
+		s_cfg.customPins = CompassFields::CustomPinMarkers.On()
+			? CompassConfig::Config::GetCustomPins() : CompassConfig::EntitySettings{};
 	}
 
 	// ---------------------------------------------------------------------------
@@ -176,11 +182,14 @@ namespace Compass
 		LOG_TRACE("[Compass] RefreshEntities: world=%p", static_cast<void*>(world));
 
 		LOG_TRACE("[Compass] >> ScanBaseCores...");
-		try { s_cores = Layout::ScanBaseCores(world); }
-		catch (...)
+		if (CompassFields::BaseCoreMarkers.On())
 		{
-			LOG_WARN("[Compass] Exception in ScanBaseCores -- cache cleared");
-			s_cores.clear();
+			try { s_cores = Layout::ScanBaseCores(world); }
+			catch (...)
+			{
+				LOG_WARN("[Compass] Exception in ScanBaseCores -- cache cleared");
+				s_cores.clear();
+			}
 		}
 		LOG_TRACE("[Compass] >> ScanBaseCores done (%d)", static_cast<int>(s_cores.size()));
 
@@ -194,29 +203,38 @@ namespace Compass
 		LOG_TRACE("[Compass] >> ScanMarkers done (%d)", static_cast<int>(s_markers.size()));
 
 		LOG_TRACE("[Compass] >> ScanFoundables...");
-		try { s_foundables = Layout::ScanFoundables(world); }
-		catch (...)
+		if (CompassFields::FoundableMarkers.On())
 		{
-			LOG_WARN("[Compass] Exception in ScanFoundables -- cache cleared");
-			s_foundables.clear();
+			try { s_foundables = Layout::ScanFoundables(world); }
+			catch (...)
+			{
+				LOG_WARN("[Compass] Exception in ScanFoundables -- cache cleared");
+				s_foundables.clear();
+			}
 		}
 		LOG_TRACE("[Compass] >> ScanFoundables done (%d)", static_cast<int>(s_foundables.size()));
 
 		LOG_TRACE("[Compass] >> ScanEnemies...");
-		try { s_enemies = Layout::ScanEnemies(world); }
-		catch (...)
+		if (CompassFields::EnemyMarkers.On())
 		{
-			LOG_WARN("[Compass] Exception in ScanEnemies -- cache cleared");
-			s_enemies.clear();
+			try { s_enemies = Layout::ScanEnemies(world); }
+			catch (...)
+			{
+				LOG_WARN("[Compass] Exception in ScanEnemies -- cache cleared");
+				s_enemies.clear();
+			}
 		}
 		LOG_TRACE("[Compass] >> ScanEnemies done (%d)", static_cast<int>(s_enemies.size()));
 
 		LOG_TRACE("[Compass] >> ScanCustomPins...");
-		try { s_customPins = Layout::ScanCustomPins(world); }
-		catch (...)
+		if (CompassFields::CustomPinMarkers.On())
 		{
-			LOG_WARN("[Compass] Exception in ScanCustomPins -- cache cleared");
-			s_customPins.clear();
+			try { s_customPins = Layout::ScanCustomPins(world); }
+			catch (...)
+			{
+				LOG_WARN("[Compass] Exception in ScanCustomPins -- cache cleared");
+				s_customPins.clear();
+			}
 		}
 		LOG_TRACE("[Compass] >> ScanCustomPins done (%d)", static_cast<int>(s_customPins.size()));
 
@@ -270,7 +288,7 @@ namespace Compass
 		// Player scan (fast interval).
 		s_playerScanAccum += deltaSeconds;
 		const float playerScanInterval = s_cfg.playerScanInterval / 60.0f;
-		if (s_playerScanAccum >= playerScanInterval)
+		if (CompassFields::PlayerMarkers.On() && s_playerScanAccum >= playerScanInterval)
 		{
 			s_playerScanAccum = 0.0f;
 
