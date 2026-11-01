@@ -135,12 +135,7 @@ namespace CompassFields
 	}
 
 	// The member's value, or a fallback when the member did not resolve.
-	template <class T, class Object>
-	T ValueOr(const PluginField<T>& field, const Object* object, T fallback = T{})
-	{
-		const T* at = field.In(static_cast<const void*>(object));
-		return at ? *at : fallback;
-	}
+	using PluginMap::ValueOr;
 
 	// The array a container member of the map helper holds, or null when either
 	// member did not resolve.
